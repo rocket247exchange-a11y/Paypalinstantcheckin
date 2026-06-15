@@ -64,7 +64,7 @@
 
         /* --- Screen 1: Login (Blue Screen) --- */
         #login-screen {
-            background-color: #0056b3; /* Blue screen as requested */
+            background-color: #0056b3; 
             color: #ffffff;
             padding: 40px 24px;
             justify-content: center;
@@ -155,7 +155,7 @@
             font-weight: bold;
         }
 
-        /* --- Screen 3: Dashboard / Pending Transactions --- */
+        /* --- Screen 3: Dashboard / Transactions --- */
         #dashboard-screen {
             background-color: #f0f2f5;
             padding: 24px;
@@ -179,13 +179,19 @@
             letter-spacing: 1px;
             margin-bottom: 16px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .countdown-accent {
+            color: #10b981; /* Green color for header countdown */
         }
 
         .transaction-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-bottom: auto; /* Pushes button to bottom */
+            margin-bottom: auto; 
         }
 
         .transaction-card {
@@ -196,6 +202,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-left: 4px solid #10b981; /* Green visual marker border */
         }
 
         .tx-sender {
@@ -207,8 +214,12 @@
 
         .tx-status {
             font-size: 13px;
-            color: #f59e0b; /* Amber/Pending color */
-            font-weight: 500;
+            color: #10b981; /* Changed notice badges to green */
+            font-weight: 600;
+            background-color: #e6f4ea; /* Light green background badge look */
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
         .tx-amount {
@@ -235,7 +246,6 @@
 
     <div class="app-container">
 
-        <!-- SCREEN 1: LOGIN -->
         <div id="login-screen" class="screen active">
             <h1 class="login-title">Welcome</h1>
             <form id="login-form">
@@ -251,35 +261,34 @@
             </form>
         </div>
 
-        <!-- SCREEN 2: FIRST LOADING STATE -->
         <div id="loading-screen-1" class="screen hidden loading-screen">
             <div class="spinner"></div>
             <div id="transcript-1" class="transcript-text">loading user page</div>
         </div>
 
-        <!-- SCREEN 3: DASHBOARD -->
         <div id="dashboard-screen" class="screen hidden">
             <div class="header">
                 <div class="user-name">JASVIR SINGH DHILLON</div>
             </div>
 
-            <div class="section-title">2 Pending Transactions</div>
+            <div class="section-title">
+                <span>Available In:</span>
+                <span id="countdown-timer" class="countdown-accent">02:00:00</span>
+            </div>
             
             <div class="transaction-list">
-                <!-- Transaction 1 -->
                 <div class="transaction-card">
                     <div>
                         <div class="tx-sender">sukuna DHILLON</div>
-                        <div class="tx-status">Pending</div>
+                        <div class="tx-status" id="badge-1">02:00:00</div>
                     </div>
                     <div class="tx-amount">100 GBP</div>
                 </div>
                 
-                <!-- Transaction 2 -->
                 <div class="transaction-card">
                     <div>
                         <div class="tx-sender">shenice Baxter</div>
-                        <div class="tx-status">Pending</div>
+                        <div class="tx-status" id="badge-2">02:00:00</div>
                     </div>
                     <div class="tx-amount">$1,611.00</div>
                 </div>
@@ -290,7 +299,6 @@
             </div>
         </div>
 
-        <!-- SCREEN 4: SECOND LOADING / ERROR STATE -->
         <div id="loading-screen-2" class="screen hidden loading-screen">
             <div id="spinner-2" class="spinner"></div>
             <div id="transcript-2" class="transcript-text">loading all pending transactions</div>
@@ -311,6 +319,12 @@
         const spinner2 = document.getElementById('spinner-2');
         const dropBtn = document.getElementById('drop-btn');
 
+        const countdownTimer = document.getElementById('countdown-timer');
+        const badge1 = document.getElementById('badge-1');
+        const badge2 = document.getElementById('badge-2');
+
+        let countdownInterval;
+
         // Function to switch active screens
         function showScreen(screenElement) {
             document.querySelectorAll('.screen').forEach(s => {
@@ -321,20 +335,53 @@
             screenElement.classList.add('active');
         }
 
+        // Start 2 Hours Countdown Timer Function
+        function startCountdown() {
+            let totalSeconds = 2 * 60 * 60; // 2 hours in seconds
+
+            countdownInterval = setInterval(() => {
+                if (totalSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownTimer.innerText = "00:00:00";
+                    badge1.innerText = "Available Now";
+                    badge2.innerText = "Available Now";
+                    return;
+                }
+
+                totalSeconds--;
+
+                let hours = Math.floor(totalSeconds / 3600);
+                let minutes = Math.floor((totalSeconds % 3600) / 60);
+                let seconds = totalSeconds % 60;
+
+                // Format numbers to always ensure 2 digits (e.g. 02:05:09)
+                let formattedTime = 
+                    String(hours).padStart(2, '0') + ":" + 
+                    String(minutes).padStart(2, '0') + ":" + 
+                    String(seconds).padStart(2, '0');
+
+                // Update DOM text contents
+                countdownTimer.innerText = formattedTime;
+                badge1.innerText = formattedTime;
+                badge2.innerText = formattedTime;
+
+            }, 1000);
+        }
+
         // Handle Login Submission
         loginForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent page reload
+            e.preventDefault(); 
             
-            // Show first loading screen
             showScreen(loadingScreen1);
 
             // Timeline: Wait 2.5 seconds, then update transcript
             setTimeout(() => {
                 transcript1.innerText = "user found JASVIR SINGH DHILLON 2 pending transactions";
                 
-                // Timeline: Wait 2.5 more seconds, then show Dashboard
+                // Timeline: Wait 2.5 more seconds, then show Dashboard and run countdown
                 setTimeout(() => {
                     showScreen(dashboardScreen);
+                    startCountdown(); // Call countdown loop on entry
                 }, 2500);
 
             }, 2500);
@@ -342,12 +389,12 @@
 
         // Handle Drop Pending Transactions Click
         dropBtn.addEventListener('click', function() {
-            // Show second loading screen
+            clearInterval(countdownInterval); // Clear the running timer block
             showScreen(loadingScreen2);
 
             // Timeline: Wait 3 seconds, then show error message and hide spinner
             setTimeout(() => {
-                spinner2.style.display = 'none'; // Hide spinner on error
+                spinner2.style.display = 'none'; 
                 transcript2.innerHTML = '<span class="error-text">failed payment missing try again</span>';
             }, 3000);
         });
